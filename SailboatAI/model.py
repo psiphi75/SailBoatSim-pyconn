@@ -67,3 +67,21 @@ class Boat(object):
         self.gps.load(boat_json['gps'])
         self.servos.load(boat_json['servos'])
         self.velocity.load(boat_json['velocity'])
+
+
+class Wind(object):
+    def __init__(self):
+        self.heading = 0
+        self.speed = 0
+
+    def load(self, wind_json):
+        self.heading = wind_json['heading']
+        self.speed = wind_json['speed']
+
+
+class Environment(object):
+    def __init__(self):
+        self.wind = Wind()
+
+    def load(self, environment_json):
+        self.wind.load(environment_json['wind'])
