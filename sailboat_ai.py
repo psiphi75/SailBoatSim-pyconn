@@ -22,6 +22,10 @@ class WebRemoteClient(Protocol):
         print('Connected! Sending register message')
         self.send_register_msg(1, 'controller', 'Simulation')
 
+    def send_protocol_msg(self, protocol_json):
+        protocol_msg = str(json.dumps(protocol_json)) + '\n'
+        self.transport.write(protocol_msg)
+
     def send_register_msg(self, seq, device_type, channel):
         register_msg_json = {'type': 'register',
                              'seq': seq,
@@ -30,8 +34,23 @@ class WebRemoteClient(Protocol):
                                  'channel': channel
                              }}
 
-        register_msg = str(json.dumps(register_msg_json)) + '\n'
-        self.transport.write(register_msg)
+        self.send_protocol_msg(register_msg_json)
+
+    def send_command_msg(self, command_data_dict):
+        print(command_data_dict)
+        command_json = {'type': 'command',
+                        'seq': self.seq,
+                        'data': command_data_dict,
+                        'uid': self.uid}
+
+        self.send_protocol_msg(command_json)
+
+    def send_move_msg(self, rudder_val, servo_sail):
+        move_msg_data = {'action': 'move',
+                         'servoRudder': rudder_val,
+                         'servoSail': servo_sail}
+
+        self.send_command_msg(move_msg_data)
 
     def process_register_message(self, register_json):
         self.seq = register_json['seq']
@@ -46,6 +65,7 @@ class WebRemoteClient(Protocol):
         self.boat.load(boat_json)
         print(self.boat.gps.latitude)
         print(self.boat.gps.longitude)
+        self.send_move_msg(0.4, 0)
 
     def process_message(self, data):
         message_json = json.loads(str(data).strip())
