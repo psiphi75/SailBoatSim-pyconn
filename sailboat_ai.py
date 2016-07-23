@@ -7,7 +7,7 @@ from twisted.internet.defer import Deferred
 from twisted.internet.protocol import ClientFactory
 from twisted.internet.protocol import Protocol
 
-PROXY_IP = 'localhost'
+PROXY_IP = '192.168.1.42'
 PROXY_PORT = 33330
 
 
