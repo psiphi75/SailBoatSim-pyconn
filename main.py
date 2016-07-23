@@ -12,96 +12,80 @@ PROXY_PORT = 33330
 
 
 class ApparentWind(object):
-    def __init__(self, heading, heading_to_boat, roll):
-        self.heading = heading
-        self.heading_to_boat = heading_to_boat
-        self.roll = roll
+    def __init__(self):
+        self.heading = 0
+        self.heading_to_boat = 0
+        self.roll = 0
+
+    def load(self, apparent_wind_json):
+        self.heading = apparent_wind_json['heading']
+        self.heading_to_boat = apparent_wind_json['headingToBoat']
+        self.speed = apparent_wind_json['speed']
 
 
 class Attitude(object):
-    def __init__(self, heading, pitch, roll):
-        self.heading = heading
-        self.pitch = pitch
-        self.roll = roll
+    def __init__(self):
+        self.heading = 0
+        self.pitch = 0
+        self.roll = 0
+
+    def load(self, attitude_json):
+        self.heading = attitude_json['heading']
+        self.pitch = attitude_json['pitch']
+        self.roll = attitude_json['roll']
 
 
 class GPS(object):
-    def __init__(self, latitude, longitude):
-        self.latitude = latitude
-        self.longitude = longitude
+    def __init__(self):
+        self.latitude = 0
+        self.longitude = 0
+
+    def load(self, gps_json):
+        self.latitude = gps_json['latitude']
+        self.longitude = gps_json['longitude']
 
 
 class Servos(object):
-    def __init__(self, has_rudder, has_sail):
-        self.has_rudder = has_rudder
-        self.has_sail = has_sail
+    def __init__(self):
+        self.has_rudder = False
+        self.has_sail = False
+
+    def load(self, servos_json):
+        self.has_rudder = servos_json['rudder']
+        self.has_sail = servos_json['sail']
 
 
 class Velocity(object):
-    def __init__(self, direction, speed):
-        self.direction = direction
-        self.speed = speed
+    def __init__(self):
+        self.direction = 0
+        self.speed = 0
+
+    def load(self, velocity_json):
+        self.direction = velocity_json['direction']
+        self.speed = velocity_json['speed']
 
 
 class Boat(object):
-    def __init__(self, apparent_wind, attitude, gps, servos, velocity):
-        self.apparent_wind = apparent_wind
-        self.attitude = attitude
-        self.gps = gps
-        self.servos = servos
-        self.velocity = velocity
+    def __init__(self):
+        self.apparent_wind = ApparentWind()
+        self.attitude = Attitude()
+        self.gps = GPS()
+        self.servos = Servos()
+        self.velocity = Velocity()
 
-
-class JSONBoatFactory(object):
-
-    @staticmethod
-    def load_apparent_wind(apparent_wind_json):
-        print('apprent wind json: %s' % str(apparent_wind_json))
-        heading = apparent_wind_json['heading']
-        heading_to_boat = apparent_wind_json['headingToBoat']
-        speed = apparent_wind_json['speed']
-        return ApparentWind(heading, heading_to_boat, speed)
-
-    @staticmethod
-    def load_attitude(attitude_json):
-        heading = attitude_json['heading']
-        pitch = attitude_json['pitch']
-        roll = attitude_json['roll']
-        return Attitude(heading, pitch, roll)
-
-    @staticmethod
-    def load_gps(gps_json):
-        latitude = gps_json['latitude']
-        longitude = gps_json['longitude']
-        return GPS(latitude, longitude)
-
-    @staticmethod
-    def load_servos(servos_json):
-        has_rudder = servos_json['rudder']
-        has_sail = servos_json['sail']
-        return Servos(has_rudder, has_sail)
-
-    @staticmethod
-    def load_velocity(velocity_json):
-        direction = velocity_json['direction']
-        speed = velocity_json['speed']
-        return Velocity(direction, speed)
-
-    @staticmethod
-    def load(boat_json):
-        apparent_wind = JSONBoatFactory.load_apparent_wind(boat_json['apparentWind'])
-        attitude = JSONBoatFactory.load_attitude(boat_json['attitude'])
-        gps = JSONBoatFactory.load_gps(boat_json['gps'])
-        servos = JSONBoatFactory.load_servos(boat_json['servos'])
-        velocity = JSONBoatFactory.load_velocity(boat_json['velocity'])
-
-        return Boat(apparent_wind, attitude, gps, servos, velocity)
+    def load(self, boat_json):
+        self.apparent_wind.load(boat_json['apparentWind'])
+        self.attitude.load(boat_json['attitude'])
+        self.gps.load(boat_json['gps'])
+        self.servos.load(boat_json['servos'])
+        self.velocity.load(boat_json['velocity'])
 
 
 class WebRemoteClient(Protocol):
     def __init__(self):
         self.uid = ''
         self.seq = 0
+        self.boat = Boat()
 
     def connectionMade(self):
         print('Connected! Sending register message')
@@ -128,8 +112,9 @@ class WebRemoteClient(Protocol):
 
         status_data_json = status_json['data']
         boat_json = status_data_json['boat']
-        boat = JSONBoatFactory.load(boat_json)
-        print(boat.velocity.direction)
+        self.boat.load(boat_json)
+        print(self.boat.gps.latitude)
+        print(self.boat.gps.longitude)
 
     def process_message(self, data):
         message_json = json.loads(str(data).strip())
