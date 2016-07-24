@@ -1,20 +1,19 @@
 #!/usr/env/python
 
 from __future__ import print_function
-import sys
-import json
+import os
 from twisted.internet import task
 from SailboatAI.client import SailboatAIClientFactory
-
-PROXY_IP = '192.168.1.42'
-PROXY_PORT = 33330
+from SailboatAI.settings import Settings
 
 
 def main(reactor):
+    settings = Settings()
+    settings_file_path = os.path.join(os.getcwd(), 'settings.json')
+    settings.load(settings_file_path)
     factory = SailboatAIClientFactory()
-    reactor.connectTCP(PROXY_IP, PROXY_PORT, factory)
+    reactor.connectTCP(settings.proxy_ip, settings.proxy_port, factory)
     return factory.done
-
 
 if __name__ == '__main__':
     task.react(main)
