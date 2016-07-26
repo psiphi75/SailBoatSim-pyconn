@@ -5,14 +5,14 @@ from twisted.internet.protocol import ClientFactory
 from twisted.internet.protocol import Protocol
 
 
-class WebRemoteClient(Protocol):
+class WebRemoteClient(Protocol, object):
     def __init__(self):
-        self.uid = ''
-        self.seq = 0
+        self.uids = {}
+        self.registered_messages = {}
+        self.register_msg('register', self.process_register_message)
 
     def connectionMade(self):
         print('Connected! Sending register message')
-        self.send_register_msg(1, 'controller', 'Simulation')
 
     def send_protocol_msg(self, protocol_json):
         protocol_msg = str(json.dumps(protocol_json)) + '\n'
@@ -28,20 +28,23 @@ class WebRemoteClient(Protocol):
 
         self.send_protocol_msg(register_msg_json)
 
-    def send_command_msg(self, command_data_dict):
-        command_json = {'type': 'command',
-                        'seq': self.seq,
-                        'data': command_data_dict,
-                        'uid': self.uid}
+    def send_command_msg(self, seq, command_data_dict):
+        if seq in self.uids:
+            command_json = {'type': 'command',
+                            'seq': seq,
+                            'data': command_data_dict,
+                            'uid': self.uids[seq]}
 
-        self.send_protocol_msg(command_json)
+            self.send_protocol_msg(command_json)
 
-    def process_register_message(self, register_json):
-        self.seq = register_json['seq']
-        self.uid = register_json['uid']
+    def process_register_message(self, uid, register_json):
+        register_seq = register_json['seq']
+        register_uid = register_json['uid']
+        self.uids[register_seq] = register_uid
+        print('Received register on %s %s' % (register_seq, register_uid))
 
-    def process_status_message(self, status_data_json):
-        pass
+    def register_msg(self, msg_id, callback):
+        self.registered_messages[msg_id] = callback
 
     def process_message(self, data):
         message_json = json.loads(str(data).strip())
@@ -54,10 +57,11 @@ class WebRemoteClient(Protocol):
         response_uid = message_json['uid']
         message_type = message_json['type']
 
-        if message_type == 'register' and self.uid == '':
-            self.process_register_message(message_json)
-        if message_type == 'status' and self.uid == response_uid:
-            self.process_status_message(message_json['data'])
+        if message_type in self.registered_messages:
+            msg_callback = self.registered_messages[message_type]
+            msg_callback(response_uid, message_json)
+        else:
+            print('Received unregistered message: %s' % message_type)
 
     def dataReceived(self, data):
         print('received data...')
