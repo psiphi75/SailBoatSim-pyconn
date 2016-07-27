@@ -28,19 +28,21 @@ class WebRemoteClient(Protocol, object):
 
         self.send_protocol_msg(register_msg_json)
 
-    def send_command_msg(self, seq, command_data_dict):
-        if seq in self.uids:
+    def send_command_msg(self, channel_name, command_data_dict):
+        if channel_name in self.uids:
             command_json = {'type': 'command',
-                            'seq': seq,
+                            'seq': 1,
                             'data': command_data_dict,
-                            'uid': self.uids[seq]}
+                            'uid': self.uids[channel_name]}
 
             self.send_protocol_msg(command_json)
 
     def process_register_message(self, uid, register_json):
+        print('Received register for %s' % (register_json))
         register_seq = register_json['seq']
         register_uid = register_json['uid']
-        self.uids[register_seq] = register_uid
+        register_channel = register_json['data']['channel']
+        self.uids[register_channel] = register_uid
         print('Received register on %s %s' % (register_seq, register_uid))
 
     def register_msg(self, msg_id, callback):
