@@ -8,8 +8,9 @@ from twisted.internet.protocol import Protocol
 class WebRemoteClient(Protocol, object):
     def __init__(self):
         self.uids = {}
-        self.registered_messages = {}
-        self.register_msg('register', self.process_register_message)
+        self.register_callbacks = {}
+        self.message_callbacks = {}
+        self.add_message_callback(None, 'register', self.process_register_message)
 
     def connectionMade(self):
         print('Connected! Sending register message')
@@ -44,9 +45,20 @@ class WebRemoteClient(Protocol, object):
         register_channel = register_json['data']['channel']
         self.uids[register_channel] = register_uid
         print('Received register on %s %s' % (register_seq, register_uid))
+        self.register_callbacks[register_channel](uid, register_json)
 
-    def register_msg(self, msg_id, callback):
-        self.registered_messages[msg_id] = callback
+    def add_message_callback(self, channel_name, msg_id, callback):
+        message_key = (channel_name, msg_id)
+        self.message_callbacks[message_key] = callback
+
+    def add_register_callback(self, channel_name, callback):
+        self.register_callbacks[channel_name] = callback
+
+    def find_channel_name(self, uid):
+        for channel_name in self.uids:
+            channel_uid = self.uids[channel_name]
+            if uid == channel_uid:
+                return channel_name
 
     def process_message(self, data):
         message_json = json.loads(str(data).strip())
@@ -59,8 +71,11 @@ class WebRemoteClient(Protocol, object):
         response_uid = message_json['uid']
         message_type = message_json['type']
 
-        if message_type in self.registered_messages:
-            msg_callback = self.registered_messages[message_type]
+        channel_name = self.find_channel_name(response_uid)
+
+        message_key = (channel_name, message_type)
+        if message_key in self.message_callbacks:
+            msg_callback = self.message_callbacks[message_key]
             msg_callback(response_uid, message_json)
         else:
             print('Received unregistered message: %s' % message_type)
