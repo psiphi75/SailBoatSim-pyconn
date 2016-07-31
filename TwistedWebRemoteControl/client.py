@@ -88,7 +88,7 @@ class WebRemoteClient(Protocol, object):
                 self.process_message(data_line)
 
 
-class WebRemoteClientFactory(ClientFactory):
+class WebRemoteClientFactory(ClientFactory, object):
     protocol = WebRemoteClient
 
     def __init__(self):
