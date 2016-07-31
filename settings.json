@@ -1,5 +1,5 @@
 {
-  "proxy_ip": "192.168.56.101",
+  "proxy_ip": "localhost",
   "proxy_port": 33330,
   "toy_channel": "Simulation",
   "contest_manager_channel": "ContestManager",
