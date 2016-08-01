@@ -1,18 +1,26 @@
 from abc import ABCMeta, abstractmethod
 
 
-class Waypoint(object):
+class Point(object):
+    def __init__(self, latitude='', longitude=''):
+        self.latitude = latitude
+        self.longtitude = longitude
+
+    def load(self, point_json):
+        self.latitude = point_json['latitude']
+        self.longtitude = point_json['longitude']
+
+
+class Waypoint(Point):
     def __init__(self, latitude='', longitude='',
                  achieved=False, waypoint_type='circle', radius=0):
-        self.latitude = latitude
-        self.longitude = longitude
+        super(Waypoint, self).__init__(latitude, longitude)
         self.achieved = achieved
         self.type = waypoint_type
         self.radius = radius
 
     def load(self, waypoint_json):
-        self.latitude = waypoint_json['latitude']
-        self.longitude = waypoint_json['longitude']
+        super(Waypoint, self).load(waypoint_json)
         self.achieved = waypoint_json['achieved']
         self.type = waypoint_json['type']
         self.radius = waypoint_json['radius']
@@ -31,6 +39,14 @@ class Contest(object):
             waypoint.load(waypoint_json)
             self.waypoints.append(waypoint)
 
+    def load_boundary_list(self, boundary_list):
+        boundary_list = []
+        for boundary_point_json in boundary_list:
+            point = Point()
+            point.load(boundary_point_json)
+            boundary_list.append(point)
+        return boundary_list
+
     @abstractmethod
     def load(self, course_json):
         waypoints = course_json['waypoints']
@@ -40,17 +56,26 @@ class Contest(object):
 class FleetRace(Contest):
     def __init__(self, contest_type):
         super(FleetRace, self).__init__(contest_type)
+        self.boundary = []
+        self.time_to_start = 0
 
     def load(self, course_json):
-        print('Received course json: %s' % str(course_json['boundary']))
+        super(FleetRace, self).load(course_json)
+        print('course json: %s' % str(course_json))
+        self.boundary = self.load_boundary_list(course_json['boundary'])
+        #self.time_to_start = course_json['timeToStart']
 
 
 class StationKeeping(Contest):
     def __init__(self, contest_type):
         super(StationKeeping, self).__init__(contest_type)
+        self.time = 0
+        self.time_remaining = 0
 
     def load(self, course_json):
-        pass
+        super(StationKeeping, self).load(course_json)
+        self.time = course_json['time']
+        self.time_remaining = course_json['timeRemaining']
 
 
 class AreaScanning(Contest):
@@ -58,7 +83,7 @@ class AreaScanning(Contest):
         super(AreaScanning, self).__init__(contest_type)
 
     def load(self, course_json):
-        pass
+        super(AreaScanning, self).load(course_json)
 
 
 class ObstacleAvoidance(Contest):
@@ -66,7 +91,7 @@ class ObstacleAvoidance(Contest):
         super(ObstacleAvoidance, self).__init__(contest_type)
 
     def load(self, course_json):
-        pass
+        super(ObstacleAvoidance, self).load(course_json)
 
 
 class ContestFactory(object):
