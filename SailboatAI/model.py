@@ -1,3 +1,4 @@
+from SailboatAI.geoutils import Point
 
 class ApparentWind(object):
     def __init__(self):
@@ -25,12 +26,10 @@ class Attitude(object):
 
 class GPS(object):
     def __init__(self):
-        self.latitude = 0
-        self.longitude = 0
+        self.point = Point()
 
     def load(self, gps_json):
-        self.latitude = gps_json['latitude']
-        self.longitude = gps_json['longitude']
+        self.point.load(gps_json)
 
 
 class Servos(object):

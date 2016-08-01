@@ -1,29 +1,5 @@
 from abc import ABCMeta, abstractmethod
-
-
-class Point(object):
-    def __init__(self, latitude='', longitude=''):
-        self.latitude = latitude
-        self.longtitude = longitude
-
-    def load(self, point_json):
-        self.latitude = point_json['latitude']
-        self.longtitude = point_json['longitude']
-
-
-class Waypoint(Point):
-    def __init__(self, latitude='', longitude='',
-                 achieved=False, waypoint_type='circle', radius=0):
-        super(Waypoint, self).__init__(latitude, longitude)
-        self.achieved = achieved
-        self.type = waypoint_type
-        self.radius = radius
-
-    def load(self, waypoint_json):
-        super(Waypoint, self).load(waypoint_json)
-        self.achieved = waypoint_json['achieved']
-        self.type = waypoint_json['type']
-        self.radius = waypoint_json['radius']
+from SailboatAI.geoutils import Point, Waypoint
 
 
 class Contest(object):
