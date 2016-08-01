@@ -7,6 +7,8 @@ from twisted.internet.protocol import Protocol
 
 class WebRemoteClient(Protocol, object):
     def __init__(self):
+        self.message_data = ''
+        self.message_continues = False
         self.uids = {}
         self.register_callbacks = {}
         self.message_callbacks = {}
@@ -61,7 +63,17 @@ class WebRemoteClient(Protocol, object):
                 return channel_name
 
     def process_message(self, data):
-        message_json = json.loads(str(data).strip())
+        self.message_data += data
+        try:
+            message_json = json.loads(str(self.message_data).strip())
+            self.message_continues = False
+        except ValueError:
+            self.message_continues = True
+
+        if self.message_continues:
+            return
+        else:
+            self.message_data = ''
 
         if 'uid' not in message_json or 'type' not in message_json:
             print('Invalid message received: %s' % str(data))

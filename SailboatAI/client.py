@@ -1,6 +1,7 @@
 import json
 from TwistedWebRemoteControl.client import WebRemoteClient, WebRemoteClientFactory
 from SailboatAI.controllers import SailboatAIController
+from SailboatAI.contests import ContestFactory
 
 
 class SailboatAIClient(WebRemoteClient):
@@ -8,6 +9,7 @@ class SailboatAIClient(WebRemoteClient):
         WebRemoteClient.__init__(self)
         self.settings = None
         self.boat_ai_controller = SailboatAIController()
+        self.contest = None
 
     def connectionMade(self):
         super(SailboatAIClient, self).connectionMade()
@@ -22,8 +24,9 @@ class SailboatAIClient(WebRemoteClient):
         pass
 
     def process_contest_manager_register_message(self, uid, register_json):
-        self.send_contest_request(self.settings.type, self.settings.location, self.settings.realtime)
-        print('Send contest manager register')
+        #self.send_contest_request(self.settings.type, self.settings.location, self.settings.realtime)
+        #print('Send contest manager register')
+        pass
 
     def send_move_msg(self, rudder_val, servo_sail):
         move_msg_data = {'action': 'move',
@@ -48,6 +51,11 @@ class SailboatAIClient(WebRemoteClient):
 
     def process_contest_manager_status_message(self, uid, message_json):
         print('Status received for course: %s' % str(message_json))
+        contest_factory = ContestFactory()
+        message_data = message_json['data']
+        contest_data = message_data['contest']
+        self.contest = contest_factory.load(contest_data)
+        print(self.contest)
 
 
 class SailboatAIClientFactory(WebRemoteClientFactory):
