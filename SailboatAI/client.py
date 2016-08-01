@@ -47,7 +47,8 @@ class SailboatAIClient(WebRemoteClient):
         print('process simulation status message')
         status_data_json = message_json['data']
         self.boat_ai_controller.update(status_data_json)
-        self.send_move_msg(0.4, 0)
+        rudder_angle, sail_angle = self.boat_ai_controller.determine_control_output(self.contest)
+        self.send_move_msg(rudder_angle, sail_angle)
 
     def process_contest_manager_status_message(self, uid, message_json):
         print('Status received for course: %s' % str(message_json))
