@@ -7,8 +7,9 @@ class ApparentWind(object):
         self.speed = 0
 
     def load(self, apparent_wind_json):
+        print('Received apparent wind: %s' % str(apparent_wind_json))
         self.heading = apparent_wind_json['heading']
-        self.heading_to_boat = apparent_wind_json['headingToBoat']
+        self.heading_to_boat = apparent_wind_json['headingToNorth']
         self.speed = apparent_wind_json['speed']
 
 

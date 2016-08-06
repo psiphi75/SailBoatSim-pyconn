@@ -24,9 +24,8 @@ class SailboatAIClient(WebRemoteClient):
         pass
 
     def process_contest_manager_register_message(self, uid, register_json):
-        #self.send_contest_request(self.settings.type, self.settings.location, self.settings.realtime)
-        #print('Send contest manager register')
-        pass
+        self.send_contest_request(self.settings.type, self.settings.location, self.settings.realtime)
+        print('Send contest manager register')
 
     def send_move_msg(self, rudder_val, servo_sail):
         move_msg_data = {'action': 'move',
@@ -45,10 +44,11 @@ class SailboatAIClient(WebRemoteClient):
 
     def process_toy_status_message(self, uid, message_json):
         print('process simulation status message')
-        status_data_json = message_json['data']
-        self.boat_ai_controller.update(status_data_json)
-        rudder_angle, sail_angle = self.boat_ai_controller.determine_control_output(self.contest)
-        self.send_move_msg(rudder_angle, sail_angle)
+        if self.contest is not None:
+            status_data_json = message_json['data']
+            self.boat_ai_controller.update(status_data_json)
+            rudder_angle, sail_angle = self.boat_ai_controller.determine_control_output(self.contest)
+            self.send_move_msg(rudder_angle, sail_angle)
 
     def process_contest_manager_status_message(self, uid, message_json):
         print('Status received for course: %s' % str(message_json))
